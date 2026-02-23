@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تبدیل دسته‌ای تصاویر</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap");
+
+      :root {
+        --bg: #0a0a0f;
+        --surface: #111118;
+        --surface2: #1a1a26;
+        --border: #2a2a3e;
+        --accent: #6c63ff;
+        --accent2: #ff6584;
+        --accent3: #43e97b;
+        --text: #e8e8f0;
+        --muted: #7777aa;
+        --radius: 16px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Vazirmatn", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+            ellipse 60% 40% at 10% 20%,
+            rgba(108, 99, 255, 0.12) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 50% 50% at 90% 80%,
+            rgba(255, 101, 132, 0.08) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 40% 60% at 60% 10%,
+            rgba(67, 233, 123, 0.06) 0%,
+            transparent 70%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .wrapper {
+        position: relative;
+        z-index: 1;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 40px 24px;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 48px;
+      }
+
+      header h1 {
+        font-size: clamp(2rem, 5vw, 3.2rem);
+        font-weight: 900;
+        letter-spacing: -1px;
+        background: linear-gradient(135deg, #6c63ff, #ff6584, #43e97b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+      }
+
+      header p {
+        color: var(--muted);
+        font-size: 1rem;
+        font-weight: 300;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px;
+        margin-bottom: 24px;
+        transition: border-color 0.3s;
+      }
+
+      .card:hover {
+        border-color: rgba(108, 99, 255, 0.4);
+      }
+
+      .card-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .card-title::before {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+
+      /* Drop Zone */
+      .drop-zone {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 48px 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .drop-zone:hover,
+      .drop-zone.drag-over {
+        border-color: var(--accent);
+        background: rgba(108, 99, 255, 0.05);
+      }
+
+      .drop-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+      }
+
+      .drop-icon {
+        font-size: 3rem;
+        margin-bottom: 12px;
+        display: block;
+        filter: grayscale(0.4);
+      }
+
+      .drop-zone h3 {
+        font-size: 1.1rem;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+
+      .drop-zone p {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .file-count-badge {
+        display: inline-block;
+        background: var(--accent);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 100px;
+        margin-top: 12px;
+      }
+
+      /* Controls */
+      .controls-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      @media (max-width: 600px) {
+        .controls-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .input-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+
+      .input-group input[type="number"],
+      .input-group select {
+        width: 100%;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: var(--text);
+        font-family: "Vazirmatn", sans-serif;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.3s;
+        direction: ltr;
+      }
+
+      .input-group input[type="number"]:focus,
+      .input-group select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+      }
+
+      /* Buttons */
+      .btn-primary {
+        display: block;
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, var(--accent), #8b5cf6);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-family: "Vazirmatn", sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        letter-spacing: 0.5px;
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(108, 99, 255, 0.4);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      /* Progress */
+      .progress-wrap {
+        display: none;
+      }
+
+      .progress-wrap.show {
+        display: block;
+      }
+
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: 0.85rem;
+      }
+
+      .progress-label {
+        color: var(--muted);
+      }
+      .progress-percent {
+        font-weight: 700;
+        color: var(--accent3);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .progress-track {
+        width: 100%;
+        height: 8px;
+        background: var(--surface2);
+        border-radius: 100px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        border-radius: 100px;
+        background: linear-gradient(90deg, var(--accent), var(--accent3));
+        transition: width 0.3s ease;
+        position: relative;
+      }
+
+      .progress-bar::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.3) 50%,
+          transparent 100%
+        );
+        animation: shimmer 1.5s infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .progress-info {
+        margin-top: 8px;
+        font-size: 0.8rem;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      /* Table */
+      .results-section {
+        display: none;
+      }
+      .results-section.show {
+        display: block;
+      }
+
+      .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .stats-bar {
+        display: flex;
+        gap: 16px;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      .stat-item strong {
+        color: var(--accent3);
+      }
+
+      .btn-clear {
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--muted);
+        padding: 8px 16px;
+        font-family: "Vazirmatn", sans-serif;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-clear:hover {
+        border-color: var(--accent2);
+        color: var(--accent2);
+      }
+
+      .table-container {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+
+      thead th {
+        background: var(--surface2);
+        padding: 14px 16px;
+        text-align: right;
+        font-weight: 600;
+        color: var(--muted);
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      tbody tr {
+        border-top: 1px solid var(--border);
+        transition: background 0.2s;
+      }
+
+      tbody tr:hover {
+        background: rgba(108, 99, 255, 0.04);
+      }
+
+      tbody td {
+        padding: 12px 16px;
+        vertical-align: middle;
+      }
+
+      .thumb {
+        width: 48px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 8px;
+        display: block;
+        border: 1px solid var(--border);
+      }
+
+      .filename {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 500;
+      }
+
+      .dim-badge {
+        display: inline-block;
+        background: rgba(108, 99, 255, 0.15);
+        color: var(--accent);
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-variant-numeric: tabular-nums;
+        direction: ltr;
+      }
+
+      .size-badge {
+        display: inline-block;
+        background: rgba(67, 233, 123, 0.1);
+        color: var(--accent3);
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+      }
+
+      .b64-cell {
+        max-width: 200px;
+      }
+
+      .b64-preview {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-family: monospace;
+        font-size: 0.72rem;
+        color: var(--muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        direction: ltr;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+      }
+
+      .b64-preview:hover {
+        border-color: var(--accent);
+        color: var(--text);
+      }
+
+      .btn-copy {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        color: var(--muted);
+        padding: 6px 12px;
+        font-family: "Vazirmatn", sans-serif;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+
+      .btn-copy:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .btn-copy.copied {
+        border-color: var(--accent3);
+        color: var(--accent3);
+      }
+
+      /* status row */
+      .status-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .dot.ok {
+        background: var(--accent3);
+      }
+      .dot.skip {
+        background: #888;
+      }
+      .dot.err {
+        background: var(--accent2);
+      }
+
+      /* toast */
+      .toast {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--accent3);
+        color: #000;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 10px 24px;
+        border-radius: 100px;
+        opacity: 0;
+        transition: all 0.3s;
+        pointer-events: none;
+        z-index: 999;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>📦 تبدیل دسته‌ای تصاویر</h1>
+        <p>تغییر اندازه و تبدیل به Base64 — بدون آپلود، مستقیم در مرورگر</p>
+      </header>
+
+      <!-- Upload -->
+      <div class="card">
+        <div class="card-title">انتخاب تصاویر</div>
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept="image/*" multiple />
+          <span class="drop-icon">🖼️</span>
+          <h3>فایل‌ها را اینجا رها کنید یا کلیک کنید</h3>
+          <p>پشتیبانی از JPG، PNG، WebP، GIF و سایر فرمت‌ها</p>
+          <div
+            id="fileCountBadge"
+            style="display: none"
+            class="file-count-badge"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="card">
+        <div class="card-title">تنظیمات تبدیل</div>
+        <div class="controls-grid">
+          <div class="input-group">
+            <label>حداکثر اندازه (پیکسل)</label>
+            <input
+              type="number"
+              id="maxSize"
+              value="1024"
+              min="1"
+              max="10000"
+              placeholder="مثلاً 1024"
+            />
+          </div>
+          <div class="input-group">
+            <label>محدودیت بر اساس</label>
+            <select id="limitBy">
+              <option value="both">هر دو (عرض و ارتفاع)</option>
+              <option value="width">فقط عرض</option>
+              <option value="height">فقط ارتفاع</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>فرمت خروجی</label>
+            <select id="outputFormat">
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/png">PNG</option>
+              <option value="image/webp">WebP</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>کیفیت (برای JPEG/WebP)</label>
+            <input
+              type="number"
+              id="quality"
+              value="85"
+              min="1"
+              max="100"
+              placeholder="0-100"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Start Button -->
+      <button class="btn-primary" id="startBtn" disabled>🚀 شروع تبدیل</button>
+
+      <!-- Progress -->
+      <div
+        class="card progress-wrap"
+        id="progressWrap"
+        style="margin-top: 24px"
+      >
+        <div class="card-title">در حال پردازش</div>
+        <div class="progress-header">
+          <span class="progress-label" id="progressLabel"
+            >در حال آماده‌سازی...</span
+          >
+          <span class="progress-percent" id="progressPercent">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-info" id="progressInfo">لطفاً صبر کنید</div>
+      </div>
+
+      <!-- Results -->
+      <div class="results-section" id="resultsSection" style="margin-top: 24px">
+        <div class="card">
+          <div class="table-header">
+            <div class="card-title" style="margin-bottom: 0">نتایج</div>
+            <div style="display: flex; gap: 12px; align-items: center">
+              <div class="stats-bar" id="statsBar"></div>
+              <button class="btn-clear" id="clearBtn">🗑 پاک کردن</button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>پیش‌نمایش</th>
+                  <th>نام فایل</th>
+                  <th>ابعاد اصلی</th>
+                  <th>ابعاد جدید</th>
+                  <th>حجم</th>
+                  <th>Base64</th>
+                  <th>کپی</th>
+                </tr>
+              </thead>
+              <tbody id="resultBody"></tbody>
+            </table>
+          </div>
+
+          <br />
+          <br />
+          <div class="table-container">
+            <table id="tblDataToExcel">
+              <thead>
+                <tr>
+                  <td>#</td>
+                  <td>Base64 Data</td>
+                </tr>
+              </thead>
+              <tbody id="tableResultBody"></tbody>
+            </table>
+          </div>
+          <button
+            class="btn-copy"
+            id="exportAllDataToExcelBtn"
+            onclick="exportAllDataToExcel()"
+          >
+            📥 دانلود فایل اکسل
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast">کپی شد! ✓</div>
+
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const dropZone = document.getElementById("dropZone");
+      const fileCountBadge = document.getElementById("fileCountBadge");
+      const startBtn = document.getElementById("startBtn");
+      const progressWrap = document.getElementById("progressWrap");
+      const progressBar = document.getElementById("progressBar");
+      const progressLabel = document.getElementById("progressLabel");
+      const progressPercent = document.getElementById("progressPercent");
+      const progressInfo = document.getElementById("progressInfo");
+      const resultsSection = document.getElementById("resultsSection");
+      const resultBody = document.getElementById("resultBody");
+      const tableResultBody = document.getElementById("tableResultBody");
+      const statsBar = document.getElementById("statsBar");
+      const clearBtn = document.getElementById("clearBtn");
+      const toast = document.getElementById("toast");
+
+      let selectedFiles = [];
+      let results = [];
+
+      // Drag & drop
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+      dropZone.addEventListener("dragleave", () =>
+        dropZone.classList.remove("drag-over")
+      );
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        const files = [...e.dataTransfer.files].filter((f) =>
+          f.type.startsWith("image/")
+        );
+        handleFiles(files);
+      });
+
+      fileInput.addEventListener("change", () => {
+        handleFiles([...fileInput.files]);
+      });
+
+      function handleFiles(files) {
+        selectedFiles = files;
+        if (files.length > 0) {
+          fileCountBadge.style.display = "inline-block";
+          fileCountBadge.textContent = `${files.length} تصویر انتخاب شد`;
+          startBtn.disabled = false;
+        } else {
+          fileCountBadge.style.display = "none";
+          startBtn.disabled = true;
+        }
+      }
+
+      clearBtn.addEventListener("click", () => {
+        results = [];
+        resultBody.innerHTML = "";
+        tableResultBody.innerHTML = "";
+        resultsSection.classList.remove("show");
+      });
+
+      startBtn.addEventListener("click", startProcessing);
+
+      async function startProcessing() {
+        if (!selectedFiles.length) return;
+
+        results = [];
+        resultBody.innerHTML = "";
+        tableResultBody.innerHTML = "";
+        resultsSection.classList.remove("show");
+        progressWrap.classList.add("show");
+        startBtn.disabled = true;
+
+        const maxSize =
+          parseInt(document.getElementById("maxSize").value) || 1024;
+        const limitBy = document.getElementById("limitBy").value;
+        const format = document.getElementById("outputFormat").value;
+        const quality =
+          parseInt(document.getElementById("quality").value) / 100;
+        const total = selectedFiles.length;
+
+        let processed = 0,
+          skipped = 0,
+          errors = 0;
+
+        for (let i = 0; i < total; i++) {
+          const file = selectedFiles[i];
+
+          updateProgress(i, total, file.name);
+
+          try {
+            const result = await processImage(
+              file,
+              maxSize,
+              limitBy,
+              format,
+              quality
+            );
+            results.push(result);
+            if (result.skipped) skipped++;
+            else processed++;
+            appendRow(result, i);
+          } catch (e) {
+            errors++;
+            appendErrorRow(file.name, e.message);
+          }
+
+          // تنفس برای مرورگر - هر 5 تا
+          if (i % 5 === 4) {
+            await sleep(30);
+          } else {
+            await sleep(5);
+          }
+        }
+
+        progressBar.style.width = "100%";
+        progressPercent.textContent = "100%";
+        progressLabel.textContent = "تکمیل شد!";
+        progressInfo.textContent = `✅ ${processed} تبدیل شد  ·  ⏭ ${skipped} رد شد  ·  ❌ ${errors} خطا`;
+
+        statsBar.innerHTML = `
+      <span class="stat-item">✅ تبدیل: <strong>${processed}</strong></span>
+      <span class="stat-item">⏭ رد شد: <strong>${skipped}</strong></span>
+      <span class="stat-item">❌ خطا: <strong>${errors}</strong></span>
+    `;
+
+        resultsSection.classList.add("show");
+        startBtn.disabled = false;
+      }
+
+      function sleep(ms) {
+        return new Promise((r) => setTimeout(r, ms));
+      }
+
+      function updateProgress(i, total, name) {
+        const pct = Math.round((i / total) * 100);
+        progressBar.style.width = pct + "%";
+        progressPercent.textContent = pct + "%";
+        progressLabel.textContent = `پردازش: ${name}`;
+        progressInfo.textContent = `${i + 1} از ${total}`;
+      }
+
+      function processImage(file, maxSize, limitBy, format, quality) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error("خطا در خواندن فایل"));
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onerror = () => reject(new Error("خطا در بارگذاری تصویر"));
+            img.onload = () => {
+              try {
+                const origW = img.naturalWidth;
+                const origH = img.naturalHeight;
+
+                let newW = origW;
+                let newH = origH;
+                let skipped = false;
+
+                // آیا نیاز به تغییر اندازه هست؟
+                let needResize = false;
+                if (limitBy === "both") {
+                  if (origW > maxSize || origH > maxSize) needResize = true;
+                } else if (limitBy === "width") {
+                  if (origW > maxSize) needResize = true;
+                } else {
+                  if (origH > maxSize) needResize = true;
+                }
+
+                if (needResize) {
+                  const ratioW =
+                    limitBy === "height"
+                      ? Infinity
+                      : origW > maxSize
+                      ? maxSize / origW
+                      : 1;
+                  const ratioH =
+                    limitBy === "width"
+                      ? Infinity
+                      : origH > maxSize
+                      ? maxSize / origH
+                      : 1;
+                  const ratio = Math.min(ratioW, ratioH);
+                  newW = Math.round(origW * ratio);
+                  newH = Math.round(origH * ratio);
+                } else {
+                  skipped = true;
+                }
+
+                const canvas = document.createElement("canvas");
+                canvas.width = newW;
+                canvas.height = newH;
+                const ctx = canvas.getContext("2d");
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = "high";
+                ctx.drawImage(img, 0, 0, newW, newH);
+
+                const dataURL = canvas.toDataURL(format, quality);
+                const b64Only = dataURL; // keep data:... prefix for display; store full
+                const b64Bytes = Math.round((dataURL.length * 3) / 4);
+
+                resolve({
+                  name: file.name,
+                  origW,
+                  origH,
+                  newW,
+                  newH,
+                  skipped,
+                  dataURL,
+                  b64: dataURL,
+                  b64Data: dataURL.replace(
+                    new RegExp("data:image/.*;base64,"),
+                    ""
+                  ),
+                  sizeKB: (b64Bytes / 1024).toFixed(1),
+                });
+              } catch (ex) {
+                reject(ex);
+              }
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function appendRow(r, idx) {
+        const tr = document.createElement("tr");
+        const status = r.skipped ? "skip" : "ok";
+        const statusText = r.skipped ? "رد شد (کوچکتر)" : "تبدیل شد";
+
+        tr.innerHTML = `
+      <td><img class="thumb" src="${r.dataURL}" alt="${r.name}"></td>
+      <td>
+        <div class="filename" title="${r.name}">${r.name}</div>
+        <div class="status-row"><span class="dot ${status}"></span><span style="color:var(--muted)">${statusText}</span></div>
+      </td>
+      <td><span class="dim-badge">${r.origW} × ${r.origH}</span></td>
+      <td><span class="dim-badge">${r.newW} × ${r.newH}</span></td>
+      <td><span class="size-badge">${r.sizeKB} KB</span></td>
+      <td class="b64-cell">
+        <div class="b64-preview" title="کلیک برای کپی" onclick="copyB64(${idx})">${r.b64.substring(
+          0,
+          40
+        )}...</div>
+      </td>
+      <td>
+        <button class="btn-copy" id="copyBtn${idx}" onclick="copyB64(${idx})">📋 کپی</button>
+      </td>
+    `;
+        resultBody.appendChild(tr);
+
+        const tr2 = document.createElement("tr");
+        tr2.innerHTML = `<td>${idx + 1}</td><td>${r.b64Data}</td>`;
+        tableResultBody.appendChild(tr2);
+      }
+
+      function appendErrorRow(name, msg) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+      <td>—</td>
+      <td>
+        <div class="filename">${name}</div>
+        <div class="status-row"><span class="dot err"></span><span style="color:var(--accent2)">${msg}</span></div>
+      </td>
+      <td colspan="5" style="color:var(--accent2)">خطا در پردازش</td>
+    `;
+        resultBody.appendChild(tr);
+      }
+
+      function copyB64(idx) {
+        const b64 = results[idx].b64;
+        navigator.clipboard
+          .writeText(b64)
+          .then(() => {
+            const btn = document.getElementById("copyBtn" + idx);
+            if (btn) {
+              btn.classList.add("copied");
+              btn.textContent = "✓ کپی شد";
+              setTimeout(() => {
+                btn.classList.remove("copied");
+                btn.textContent = "📋 کپی";
+              }, 2000);
+            }
+            showToast();
+          })
+          .catch(() => {
+            // fallback
+            const ta = document.createElement("textarea");
+            ta.value = b64;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            showToast();
+          });
+      }
+
+      function exportAllDataToExcel() {
+        const tableHTML = document.getElementById("tblDataToExcel").outerHTML;
+
+        // Excel-compatible HTML wrapper — بدون هیچ لایبرری خارجی
+        const excelDoc = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office"
+                xmlns:x="urn:schemas-microsoft-com:office:excel"
+                xmlns="http://www.w3.org/TR/REC-html40">
+          <head>
+            <meta charset="UTF-8">
+            <!--[if gte mso 9]>
+            <xml>
+              <x:ExcelWorkbook>
+                <x:ExcelWorksheets>
+                  <x:ExcelWorksheet>
+                    <x:Name>Base64 Images</x:Name>
+                    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+                  </x:ExcelWorksheet>
+                </x:ExcelWorksheets>
+              </x:ExcelWorkbook>
+            </xml>
+            <![endif]-->
+          </head>
+          <body>${tableHTML}</body>
+          </html>`;
+
+        const blob = new Blob(
+          ["\uFEFF" + excelDoc], // BOM برای UTF-8 درست در اکسل
+          { type: "application/vnd.ms-excel;charset=utf-8" }
+        );
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download =
+          "base64-images-" + new Date().toISOString().slice(0, 10) + ".xls";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // فیدبک بصری روی دکمه
+        const btn = document.getElementById("exportAllDataToExcelBtn");
+        if (btn) {
+          const original = btn.textContent;
+          btn.classList.add("copied");
+          btn.textContent = "✓ فایل دانلود شد";
+          setTimeout(() => {
+            btn.classList.remove("copied");
+            btn.textContent = original;
+          }, 2500);
+        }
+      }
+
+      function showToast() {
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2000);
+      }
+    </script>
+  </body>
+</html>
